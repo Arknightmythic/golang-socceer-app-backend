@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"user-service/repositories"
+	repositories "user-service/repositories"
 	"gorm.io/gorm"
 )
 
