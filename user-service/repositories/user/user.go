@@ -20,7 +20,7 @@ type IUserRepository interface{
 	Register(context.Context,*dto.RegisterRequest)(*models.User,error)
 	Update(context.Context,*dto.UpdateRequest,string)(*models.User,error)
 	FindByUsername(context.Context,string)(*models.User,error)
-	FIndByEmail(context.Context,string)(*models.User,error)
+	FindByEmail(context.Context,string)(*models.User,error)
 	FindByUUID(context.Context,string)(*models.User,error)
 }
 
@@ -39,29 +39,35 @@ func (r *UserRepository) Register(ctx context.Context, req *dto.RegisterRequest)
 		RoleID: req.RoleID,
 	}
 
-	err:= r.db.WithContext(ctx).Create(&user).Error
+	err:= r.db.WithContext(ctx).Create(user).Error
 	if err != nil{
 		return nil, errWrap.WrapError(errConstant.ErrSQLError)
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 
 
 func (r *UserRepository) Update(ctx context.Context, req *dto.UpdateRequest, userUUID string) (*models.User, error){
-	user := models.User{
-		Name: req.Name,
-		Username: req.Username,
-		Password: req.Password,
-		PhoneNumber: req.PhoneNumber,
-		Email: req.Email,
+	var user models.User
+	if err := r.db.WithContext(ctx).Where("uuid = ?", userUUID).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errWrap.WrapError(errConstant.ErrUserNotFound)
+		}
+		return nil, errWrap.WrapError(errConstant.ErrSQLError)
 	}
 
-	err := r.db.WithContext(ctx).
-		Where("uuid = ?", userUUID).
-		Updates(&user).Error
-	if err != nil{
+	user.Name = req.Name
+	user.Username = req.Username
+	if req.Password != "" {
+		user.Password = req.Password
+	}
+	user.PhoneNumber = req.PhoneNumber
+	user.Email = req.Email
+	
+
+	if err := r.db.WithContext(ctx).Save(&user).Error; err != nil {
 		return nil, errWrap.WrapError(errConstant.ErrSQLError)
 	}
 	return &user, nil
