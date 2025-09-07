@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"time"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

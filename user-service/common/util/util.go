@@ -76,7 +76,7 @@ func SetEnvFromConsulKV(v *viper.Viper) error{
 }
 
 
-func BindFormConsul(dest any, endpoint, path string) error {
+func BindFromConsul(dest any, endpoint, path string) error {
 	v := viper.New()
 	v.SetConfigType("json")
 	err := v.AddRemoteProvider("consul", endpoint, path)
