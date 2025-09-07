@@ -1,7 +1,8 @@
 package repositories
 
 import (
-	repositories "user-service/repositories"
+	// Mengubah import ke package user yang spesifik
+	repositories "user-service/repositories/user" 
 	"gorm.io/gorm"
 )
 
@@ -11,7 +12,8 @@ type Register struct{
 
 
 type IRepositoryRegistry interface{
-	GetUser() repositories.IUserRepository
+	// Menggunakan interface dari package user
+	GetUser() repositories.IUserRepository 
 }
 
 
@@ -19,6 +21,7 @@ func NewRepositoryRegistry(db *gorm.DB) IRepositoryRegistry {
 	return &Register{db: db}
 }
 
-func (r *Register) GetUser() repositories.IUserRepository {
+// Mengembalikan implementasi dari package user
+func (r *Register) GetUser() repositories.IUserRepository { 
 	return repositories.NewUserRepository(r.db)
 }
