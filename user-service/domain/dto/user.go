@@ -8,11 +8,12 @@ type LoginRequest struct {
 }
 
 type UserResponse struct {
-	UUID     uuid.UUID `json:"uuid"`
-	Name     string    `json:"name"`
-	Email    string    `json:"email"`
-	Role     string    `json:"role"`
-	PhoneNum string    `json:"phone_num"`
+	UUID        uuid.UUID `json:"uuid"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	Username    string    `json:"username"`
+	Role        string    `json:"role"`
+	PhoneNumber string    `json:"phone_num"`
 }
 
 type LoginResponse struct {
@@ -41,5 +42,5 @@ type UpdateRequest struct {
 	Password        string `json:"password,omitempty"`
 	ConfirmPassword string `json:"confirmPassword,omitempty"`
 	PhoneNumber     string `json:"phoneNumber" validate:"required"`
-	RoleID          uint   
+	RoleID          uint
 }

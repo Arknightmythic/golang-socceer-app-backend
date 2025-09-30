@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Register struct{
+type Registry struct{
 	db *gorm.DB
 }
 
@@ -18,10 +18,10 @@ type IRepositoryRegistry interface{
 
 
 func NewRepositoryRegistry(db *gorm.DB) IRepositoryRegistry {
-	return &Register{db: db}
+	return &Registry{db: db}
 }
 
 // Mengembalikan implementasi dari package user
-func (r *Register) GetUser() repositories.IUserRepository { 
+func (r *Registry) GetUser() repositories.IUserRepository { 
 	return repositories.NewUserRepository(r.db)
 }
