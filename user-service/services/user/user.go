@@ -6,6 +6,7 @@ import (
 	"time"
 	"user-service/config"
 	"user-service/constants"
+	errConstant "user-service/constants/error"
 	"user-service/domain/dto"
 	"user-service/repositories"
 
@@ -13,148 +14,160 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
-type UserService struct{
+type UserService struct {
 	repository repositories.IRepositoryRegistry
 }
 
-
-type IUserService interface{
-	Login(context.Context,string,string)(*dto.LoginResponse,error)
-	Register(context.Context, *dto.RegisterRequest)(*dto.RegisterResponse, error)
-	Update(context.Context, *dto.UpdateRequest, string)(*dto.UserResponse, error)
-	GetUserLogin(context.Context)(*dto.UserResponse, error)
-	GetUserByUUID(context.Context, string)(*dto.UserResponse, error)
+type IUserService interface {
+	Login(context.Context, *dto.LoginRequest) (*dto.LoginResponse, error)
+	Register(context.Context, *dto.RegisterRequest) (*dto.RegisterResponse, error)
+	Update(context.Context, *dto.UpdateRequest, string) (*dto.UserResponse, error)
+	GetUserLogin(context.Context) (*dto.UserResponse, error)
+	GetUserByUUID(context.Context, string) (*dto.UserResponse, error)
 }
 
-type Claims struct{
+type Claims struct {
 	User *dto.UserResponse
 	jwt.RegisteredClaims
 }
 
-
-func NewUserService(repository repositories.IRepositoryRegistry) IUserService{
+func NewUserService(repository repositories.IRepositoryRegistry) IUserService {
 	return &UserService{repository: repository}
 }
 
-func (u *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error){
+func (u *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
 	user, err := u.repository.GetUser().FindByUsername(ctx, req.Username)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
-	expirationTime := time.Now().Add(time.Duration(config.Config.JwtExpirationTime)*time.Minute).Unix()
+	expirationTime := time.Now().Add(time.Duration(config.Config.JwtExpirationTime) * time.Minute).Unix()
 	data := &dto.UserResponse{
-		UUID: user.UUID,
-		Name:user.Name,
-		Username: user.Username,
+		UUID:        user.UUID,
+		Name:        user.Name,
+		Username:    user.Username,
 		PhoneNumber: user.PhoneNumber,
-		Email:user.Email,
-		Role: strings.ToLower(user.Role.Code),
-		
+		Email:       user.Email,
+		Role:        strings.ToLower(user.Role.Code),
 	}
 
-
-	claims:= &Claims{
-		User:data,
+	claims := &Claims{
+		User: data,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Unix(expirationTime,0)),
+			ExpiresAt: jwt.NewNumericDate(time.Unix(expirationTime, 0)),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-
 	tokenString, err := token.SignedString([]byte(config.Config.JwtSecretKey))
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
-
 	response := &dto.LoginResponse{
-		User: *data,
+		User:  *data,
 		Token: tokenString,
 	}
 
 	return response, nil
-
 }
 
-
-func (u *UserService) isUsernameExist(ctx context.Context, username string) bool{
+func (u *UserService) isUsernameExist(ctx context.Context, username string) bool {
 	user, err := u.repository.GetUser().FindByUsername(ctx, username)
-	if err != nil{
+	if err != nil {
 		return false
 	}
-	if user != nil{
+	if user != nil {
 		return true
 	}
 
 	return false
-
 }
 
-func (u *UserService) isEmailExist(ctx context.Context, emaiil string) bool{
-	user, err := u.repository.GetUser().FindByUsername(ctx, emaiil)
-	if err != nil{
+func (u *UserService) isEmailExist(ctx context.Context, emaiil string) bool {
+	user, err := u.repository.GetUser().FindByEmail(ctx, emaiil)
+	if err != nil {
 		return false
 	}
-	if user != nil{
+	if user != nil {
 		return true
 	}
 
 	return false
-
 }
 
-
-func (u *UserService) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error){
+func (u *UserService) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
-	if u.isUsernameExist(ctx, req.Username){
-		return nil, errConstanct.ErrUsernameExists
+	if u.isUsernameExist(ctx, req.Username) {
+		return nil, errConstant.ErrUsernameExists
 	}
 
-	if u.isEmailExist(ctx, req.Email){
-		return nil, errConstanct.ErrEmailExists
+	if u.isEmailExist(ctx, req.Email) {
+		return nil, errConstant.ErrEmailExists
 	}
 
 	if req.Password != req.ConfirmPassword {
-		return nil, errConstanct.ErrPasswordDoesNotMatch
+		return nil, errConstant.ErrPasswordDoesNotMatch
 	}
 
 	user, err := u.repository.GetUser().Register(ctx, &dto.RegisterRequest{
-		Name: req.Name,
+		Name:     req.Name,
 		Username: req.Username,
-		Email: req.Email,
+		Email:    req.Email,
 		Password: string(hashedPassword),
-		RoleID: constants.Customer,
+		RoleID:   constants.Customer,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-
 	response := &dto.RegisterResponse{
 		User: dto.UserResponse{
-			UUID: user.UUID,
-			Name: user.Name,
-			Username: user.Username,
-			Email: user.Email,
+			UUID:        user.UUID,
+			Name:        user.Name,
+			Username:    user.Username,
+			Email:       user.Email,
 			PhoneNumber: user.PhoneNumber,
-
 		},
 	}
 
 	return response, nil
+}
 
+func (u *UserService) GetUserByUUID(ctx context.Context, uuid string) (*dto.UserResponse, error) {
+	user, err := u.repository.GetUser().FindByUUID(ctx, uuid)
+	if err != nil {
+		return nil, err
+	}
 
+	response := &dto.UserResponse{
+		UUID:        user.UUID,
+		Name:        user.Name,
+		Username:    user.Username,
+		Email:       user.Email,
+		PhoneNumber: user.PhoneNumber,
+		Role:        strings.ToLower(user.Role.Code),
+	}
+
+	return response, nil
+}
+
+func (u *UserService) GetUserLogin(ctx context.Context) (*dto.UserResponse, error) {
+	// Your implementation here
+	return nil, nil
+}
+
+func (u *UserService) Update(ctx context.Context, req *dto.UpdateRequest, uuid string) (*dto.UserResponse, error) {
+	// Your implementation here
+	return nil, nil
 }
