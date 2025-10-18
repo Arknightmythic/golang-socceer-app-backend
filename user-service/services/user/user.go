@@ -94,7 +94,7 @@ func (u *UserService) isUsernameExist(ctx context.Context, username string) bool
 }
 
 func (u *UserService) isEmailExist(ctx context.Context, emaiil string) bool {
-	user, err := u.repository.GetUser().FindByUsername(ctx, emaiil)
+	user, err := u.repository.GetUser().FindByEmail(ctx, emaiil)
 	if err != nil {
 		return false
 	}
@@ -177,9 +177,9 @@ func (u *UserService) Update(ctx context.Context, request *dto.UpdateRequest, uu
 
 	}
 
-	isEmailExist := u.isUsernameExist(ctx, request.Email)
+	isEmailExist := u.isEmailExist(ctx, request.Email)
 	if isEmailExist && user.Email != request.Email {
-		checkEmail, err = u.repository.GetUser().FindByUsername(ctx, request.Email)
+		checkEmail, err = u.repository.GetUser().FindByEmail(ctx, request.Email)
 		if err != nil {
 			return nil, err
 		}
@@ -231,7 +231,8 @@ func (u *UserService) Update(ctx context.Context, request *dto.UpdateRequest, uu
 
 func (u *UserService) GetUserLogin(ctx context.Context) (*dto.UserResponse, error) {
 	var (
-		userLogin = ctx.Value(constants.UserLogin).(*dto.UserResponse)
+		// FIX: Use the new imported key and cast it to the key's type
+		userLogin = ctx.Value(constants.UserLoginKey).(*dto.UserResponse)
 		data      dto.UserResponse
 	)
 

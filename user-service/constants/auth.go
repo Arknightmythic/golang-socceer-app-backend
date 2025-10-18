@@ -1,7 +1,10 @@
 package constants
 
+// FIX: Define a custom key type for context
+type ContextKey string
 
+// FIX: Define the key to be used for storing user data
 const (
-	UserLogin = "user_login"
-	Token = "token"
+	UserLoginKey ContextKey = "userLogin"
+	Token        = "token"
 )

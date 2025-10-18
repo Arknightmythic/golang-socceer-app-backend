@@ -22,10 +22,6 @@ import (
 )
 
 
-type contextKey string
-
-
-const userLoginKey = contextKey("userLogin")
 
 func HandlePanic() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -118,7 +114,7 @@ func validateBearerToken(c *gin.Context, token string) error {
 	}
 
 	
-	userLogin := c.Request.WithContext(context.WithValue(c.Request.Context(), userLoginKey, claims.User))
+	userLogin := c.Request.WithContext(context.WithValue(c.Request.Context(), constants.UserLoginKey, claims.User))
 
 	c.Request = userLogin
 	c.Set(constants.Token, token)
