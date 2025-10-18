@@ -6,15 +6,16 @@ import (
 	"user-service/domain/dto"
 	"user-service/services"
 	errWrap "user-service/common/error"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
-type UserController struct{
+type UserController struct {
 	service services.IServiceRegistry
 }
 
-type IUserController interface{
+type IUserController interface {
 	Login(*gin.Context)
 	Register(*gin.Context)
 	Update(*gin.Context)
@@ -22,144 +23,133 @@ type IUserController interface{
 	GetUserByUUID(*gin.Context)
 }
 
-
-func NewUserController(service services.IServiceRegistry) IUserController{
+func NewUserController(service services.IServiceRegistry) IUserController {
 	return &UserController{service: service}
 }
 
-
-func(u *UserController) Login(ctx *gin.Context){
+func (u *UserController) Login(ctx *gin.Context) {
 	request := &dto.LoginRequest{}
 
-
-	err:=ctx.ShouldBindJSON(request)
-
-	if err !=nil {
+	if err := ctx.ShouldBindJSON(request); err != nil {
 		response.HttpResponse(response.ParamHTTPResp{
 			Code: http.StatusBadRequest,
-			Err: err,
-			Gin: ctx,
+			Err:  err,
+			Gin:  ctx,
 		})
 		return
 	}
 
 	validate := validator.New()
-	err = validate.Struct(request)
-	if err != nil {
-		errMessage := http.StatusText(http.StatusUnprocessableEntity)
+	if err := validate.Struct(request); err != nil {
+		errMessage := "Unprocessable Entity"
 		errResponse := errWrap.ErrValidationResponse(err)
 		response.HttpResponse(response.ParamHTTPResp{
-			Code: http.StatusUnprocessableEntity,
+			Code:    http.StatusUnprocessableEntity,
 			Message: &errMessage,
-			Data: errResponse,
-			Err: err,
-			Gin: ctx,
+			Data:    errResponse,
+			Err:     err,
+			Gin:     ctx,
 		})
 		return
 	}
 
-	user, err := u.service.GetUser().Login(ctx,request)
-	if err != nil{
+	user, err := u.service.GetUser().Login(ctx, request)
+	if err != nil {
+		// UPDATE: Changed status to StatusUnauthorized for login failures.
 		response.HttpResponse(response.ParamHTTPResp{
 			Code: http.StatusUnauthorized,
-			Err: err,
-			Gin: ctx,
+			Err:  err,
+			Gin:  ctx,
 		})
 		return
 	}
 
 	response.HttpResponse(response.ParamHTTPResp{
-		Code: http.StatusOK,
-		Data: user.User,
+		Code:  http.StatusOK,
+		Data:  user.User,
 		Token: &user.Token,
-		Gin: ctx,
+		Gin:   ctx,
 	})
 }
 
-func(u *UserController) Register(ctx *gin.Context){
+func (u *UserController) Register(ctx *gin.Context) {
 	request := &dto.RegisterRequest{}
 
-
-	err:=ctx.ShouldBindJSON(request)
-
-	if err !=nil {
+	if err := ctx.ShouldBindJSON(request); err != nil {
 		response.HttpResponse(response.ParamHTTPResp{
 			Code: http.StatusBadRequest,
-			Err: err,
-			Gin: ctx,
+			Err:  err,
+			Gin:  ctx,
 		})
 		return
 	}
 
 	validate := validator.New()
-	err = validate.Struct(request)
-	if err != nil {
-		errMessage := http.StatusText(http.StatusUnprocessableEntity)
+	if err := validate.Struct(request); err != nil {
+		errMessage := "Unprocessable Entity"
 		errResponse := errWrap.ErrValidationResponse(err)
 		response.HttpResponse(response.ParamHTTPResp{
-			Code: http.StatusUnprocessableEntity,
+			Code:    http.StatusUnprocessableEntity,
 			Message: &errMessage,
-			Data: errResponse,
-			Err: err,
-			Gin: ctx,
+			Data:    errResponse,
+			Err:     err,
+			Gin:     ctx,
 		})
 		return
 	}
 
-	user, err := u.service.GetUser().Register(ctx,request)
-	if err != nil{
+	user, err := u.service.GetUser().Register(ctx, request)
+	if err != nil {
+		// UPDATE: Changed status to StatusBadRequest for registration failures.
 		response.HttpResponse(response.ParamHTTPResp{
-			Code: http.StatusUnauthorized,
-			Err: err,
-			Gin: ctx,
+			Code: http.StatusBadRequest,
+			Err:  err,
+			Gin:  ctx,
 		})
 		return
 	}
 
 	response.HttpResponse(response.ParamHTTPResp{
-		Code: http.StatusOK,
+		Code: http.StatusCreated, // UPDATE: Changed status to StatusCreated for successful registration.
 		Data: user.User,
-		Gin: ctx,
+		Gin:  ctx,
 	})
 }
 
-func(u *UserController) Update(ctx *gin.Context){
+func (u *UserController) Update(ctx *gin.Context) {
 	request := &dto.UpdateRequest{}
 	uuid := ctx.Param("uuid")
 
-
-	err:=ctx.ShouldBindJSON(request)
-
-	if err !=nil {
+	if err := ctx.ShouldBindJSON(request); err != nil {
 		response.HttpResponse(response.ParamHTTPResp{
 			Code: http.StatusBadRequest,
-			Err: err,
-			Gin: ctx,
+			Err:  err,
+			Gin:  ctx,
 		})
 		return
 	}
 
 	validate := validator.New()
-	err = validate.Struct(request)
-	if err != nil {
-		errMessage := http.StatusText(http.StatusUnprocessableEntity)
+	if err := validate.Struct(request); err != nil {
+		errMessage := "Unprocessable Entity"
 		errResponse := errWrap.ErrValidationResponse(err)
 		response.HttpResponse(response.ParamHTTPResp{
-			Code: http.StatusUnprocessableEntity,
+			Code:    http.StatusUnprocessableEntity,
 			Message: &errMessage,
-			Data: errResponse,
-			Err: err,
-			Gin: ctx,
+			Data:    errResponse,
+			Err:     err,
+			Gin:     ctx,
 		})
 		return
 	}
 
-	user, err := u.service.GetUser().Update(ctx,request,uuid)
-	if err != nil{
+	user, err := u.service.GetUser().Update(ctx, request, uuid)
+	if err != nil {
+		// UPDATE: Changed status to StatusBadRequest for update failures.
 		response.HttpResponse(response.ParamHTTPResp{
-			Code: http.StatusUnauthorized,
-			Err: err,
-			Gin: ctx,
+			Code: http.StatusBadRequest,
+			Err:  err,
+			Gin:  ctx,
 		})
 		return
 	}
@@ -167,43 +157,43 @@ func(u *UserController) Update(ctx *gin.Context){
 	response.HttpResponse(response.ParamHTTPResp{
 		Code: http.StatusOK,
 		Data: user,
-		Gin: ctx,
+		Gin:  ctx,
 	})
 }
 
-
-func(u *UserController) GetUserLogin(ctx *gin.Context){
+func (u *UserController) GetUserLogin(ctx *gin.Context) {
 	user, err := u.service.GetUser().GetUserLogin(ctx.Request.Context())
-	if err != nil{
+	if err != nil {
 		response.HttpResponse(response.ParamHTTPResp{
 			Code: http.StatusUnauthorized,
-			Err: err,
-			Gin: ctx,
+			Err:  err,
+			Gin:  ctx,
 		})
 		return
 	}
-	
-	response.HttpResponse((response.ParamHTTPResp{
+
+	response.HttpResponse(response.ParamHTTPResp{
 		Code: http.StatusOK,
 		Data: user,
-		Gin: ctx,
-	}))
+		Gin:  ctx,
+	})
 }
 
-func(u *UserController) GetUserByUUID(ctx *gin.Context){
+func (u *UserController) GetUserByUUID(ctx *gin.Context) {
 	user, err := u.service.GetUser().GetUserByUUID(ctx.Request.Context(), ctx.Param("uuid"))
-	if err != nil{
+	if err != nil {
+		// UPDATE: Changed status to StatusNotFound for user not found errors.
 		response.HttpResponse(response.ParamHTTPResp{
-			Code: http.StatusUnauthorized,
-			Err: err,
-			Gin: ctx,
+			Code: http.StatusNotFound,
+			Err:  err,
+			Gin:  ctx,
 		})
 		return
 	}
-	
-	response.HttpResponse((response.ParamHTTPResp{
+
+	response.HttpResponse(response.ParamHTTPResp{
 		Code: http.StatusOK,
 		Data: user,
-		Gin: ctx,
-	}))
+		Gin:  ctx,
+	})
 }

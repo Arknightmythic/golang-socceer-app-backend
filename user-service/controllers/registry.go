@@ -15,7 +15,7 @@ type IControllerRegistry interface{
 }
 
 func NewControllerRegistry(service services.IServiceRegistry) IControllerRegistry{
-	return &Registry(service: service)
+	return &Registry{service: service}
 }
 
 func(u *Registry) GetUserController() controllers.IUserController {
