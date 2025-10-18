@@ -20,7 +20,7 @@ type UserService struct {
 }
 
 type IUserService interface {
-	Login(context.Context, string, string) (*dto.LoginResponse, error)
+	Login(context.Context, *dto.LoginRequest) (*dto.LoginResponse, error)
 	Register(context.Context, *dto.RegisterRequest) (*dto.RegisterResponse, error)
 	Update(context.Context, *dto.UpdateRequest, string) (*dto.UserResponse, error)
 	GetUserLogin(context.Context) (*dto.UserResponse, error)
@@ -149,7 +149,7 @@ func (u *UserService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 
 }
 
-func (u *UserService) update(ctx context.Context, request *dto.UpdateRequest, uuid string) (*dto.UserResponse, error) {
+func (u *UserService) Update(ctx context.Context, request *dto.UpdateRequest, uuid string) (*dto.UserResponse, error) {
 	var (
 		password                  string
 		checkUsername, checkEmail *models.User
@@ -191,9 +191,9 @@ func (u *UserService) update(ctx context.Context, request *dto.UpdateRequest, uu
 	}
 
 	if request.Password != nil {
-		if *&request.Password != *&request.ConfirmPassword {
-			return nil, errConstant.ErrPasswordDoesNotMatch
-		}
+		if request.ConfirmPassword == nil || *request.Password != *request.ConfirmPassword {
+            return nil, errConstant.ErrPasswordDoesNotMatch
+        }
 		hashedPassword, err = bcrypt.GenerateFromPassword([]byte(*request.Password), bcrypt.DefaultCost)
 
 		if err != nil {

@@ -60,8 +60,8 @@ func (r *UserRepository) Update(ctx context.Context, req *dto.UpdateRequest, use
 
 	user.Name = req.Name
 	user.Username = req.Username
-	if req.Password != "" {
-		user.Password = req.Password
+	if req.Password != nil && *req.Password != "" {
+		user.Password = *req.Password
 	}
 	user.PhoneNumber = req.PhoneNumber
 	user.Email = req.Email
